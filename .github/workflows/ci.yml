@@ -71,3 +71,14 @@ jobs:
       - run: uv sync --locked
       - run: uv run alembic upgrade head
       - run: uv run alembic downgrade base
+
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Fresh `docker compose up` yields a migrated database
+        run: docker compose up --build --exit-code-from migrate migrate
+      - name: Confirm alembic_version is populated
+        run: docker compose exec -T postgres psql -U ufc -d ufc -tAc "select version_num from alembic_version" | grep -x 0001
+      - if: always()
+        run: docker compose down -v

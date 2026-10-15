@@ -14,5 +14,13 @@ services:
       interval: 5s
       retries: 10
 
+  migrate:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg://ufc:ufc@postgres:5432/ufc
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:
