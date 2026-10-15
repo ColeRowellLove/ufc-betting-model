@@ -10,7 +10,9 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Cole Rowell" }]
-dependencies = []
+dependencies = [
+    "pydantic-settings>=2.16.0",
+]
 
 [dependency-groups]
 dev = [
