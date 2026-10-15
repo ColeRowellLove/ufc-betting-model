@@ -46,3 +46,28 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --locked
       - run: uv run pytest
+
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ufc
+          POSTGRES_PASSWORD: ufc
+          POSTGRES_DB: ufc
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ufc"
+          --health-interval 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg://ufc:ufc@localhost:5432/ufc
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run alembic upgrade head
+      - run: uv run alembic downgrade base
