@@ -17,6 +17,16 @@ benchmarked against the de-vigged market (log loss, Brier, CLV), not profit.
 - `main` is releasable; `develop` is the integration branch. Branch from `develop` as
   `feat/*`, `fix/*`, `chore/*`; PR into `develop`; squash-merge. Never push directly to `main`.
 
+## Pull request rules (enforced by CI)
+- Every PR links exactly one open, non-epic issue via `Closes #N` in the PR body (the `PR policy`
+  check fails otherwise). Create the issue first if none exists. Exempt: Dependabot PRs and the
+  `develop` -> `main` release PR.
+- A PR does only what its issue asks: no drive-by refactors, formatting churn or unrelated fixes.
+  Anything else found along the way gets its own issue and its own PR.
+- Required status checks before merge: `lint` (ruff check + format), `typecheck` (mypy strict),
+  `test` (pytest on 3.11/3.12/3.13) and `pr-policy`. Never merge on red; never bypass protection.
+- Name branches `feat/*`, `fix/*`, `chore/*`; squash-merge into `develop`.
+
 ## Modeling rules (non-negotiable)
 1. Features only from bouts strictly before the event date. No career totals from profile pages.
 2. Randomize fighter a/b order; never use red/blue corner. Train on both orderings.
