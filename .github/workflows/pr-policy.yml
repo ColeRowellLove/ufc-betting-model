@@ -1,0 +1,56 @@
+name: PR policy
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  pr-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require exactly one linked issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          # Bots (Dependabot) cannot link issues; the develop -> main release PR bundles many.
+          if [ "$PR_AUTHOR" = "dependabot[bot]" ]; then
+            echo "Dependabot PR: exempt."; exit 0
+          fi
+          if [ "$HEAD_REF" = "develop" ] && [ "$BASE_REF" = "main" ]; then
+            echo "Release PR (develop -> main): exempt."; exit 0
+          fi
+
+          issues=$(printf '%s' "$PR_BODY" \
+            | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) +#[0-9]+' \
+            | grep -oE '[0-9]+' | sort -u || true)
+          count=$(printf '%s' "$issues" | grep -c . || true)
+
+          if [ "$count" -ne 1 ]; then
+            echo "::error::PR must link exactly one issue with 'Closes #N' (found $count)."
+            exit 1
+          fi
+
+          title=$(gh issue view "$issues" -R "$REPO" --json title,state,labels \
+            -q '.state + "|" + .title + "|" + ([.labels[].name] | join(","))')
+          state=${title%%|*}
+          if [ "$state" != "OPEN" ]; then
+            echo "::error::Issue #$issues is not open."; exit 1
+          fi
+          case "$title" in
+            *"[Epic]"*|*"|epic"*|*",epic"*)
+              echo "::error::Issue #$issues is an epic; link one of its sub-issues instead."; exit 1 ;;
+          esac
+          echo "OK: PR is linked to issue #$issues."
