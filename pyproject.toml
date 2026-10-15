@@ -11,7 +11,10 @@ requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Cole Rowell" }]
 dependencies = [
+    "alembic>=1.20.0",
+    "psycopg[binary]>=3.3.6",
     "pydantic-settings>=2.16.0",
+    "sqlalchemy>=2.1.4",
 ]
 
 [dependency-groups]
